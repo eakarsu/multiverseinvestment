@@ -5,7 +5,7 @@ import {
   Compass, Brain, BarChart3, Sparkles, FileBarChart,
   LogOut, ChevronRight, Briefcase, GitBranch, Receipt,
   Search, Award, BookOpen, Building2, ShoppingCart, UserPlus,
-  Handshake, CalendarClock, CreditCard
+  Handshake, CalendarClock, CreditCard, ClipboardList
 } from 'lucide-react'
 
 const navGroups = [
@@ -79,6 +79,35 @@ const navGroups = [
       { name: 'Market Analysis', path: '/ai/market-analysis', icon: BarChart3 },
       { name: 'Talent Matcher', path: '/ai/talent-matcher', icon: Sparkles },
       { name: 'Report Generator', path: '/ai/report-generator', icon: FileBarChart },
+      { name: 'Proposal Assistant', path: '/ai/proposal-assistant', icon: FileText },
+      { name: 'Investment Thesis', path: '/ai/investment-thesis-analyzer', icon: TrendingUp },
+      { name: 'Talent Brief', path: '/ai/talent-brief-generator', icon: ClipboardList },
+    ]
+  },
+  // === Batch 11 Gaps & Frontend Mounts ===
+  {
+    label: 'BATCH 11 GAPS',
+    items: [
+      { name: 'Proposal Writing', path: '/gap/proposal-writing', icon: FileText },
+      { name: 'Due Diligence', path: '/gap/due-diligence', icon: TrendingUp },
+      { name: 'Role Spec', path: '/gap/role-spec', icon: ClipboardList },
+      { name: 'Meeting Summarizer', path: '/gap/meeting-summarizer', icon: CalendarClock },
+      { name: 'KPI Anomaly', path: '/gap/kpi-anomaly', icon: BarChart3 },
+      { name: 'Deal-Stage Auto', path: '/gap/deal-stage', icon: GitBranch },
+      { name: 'Doc Management', path: '/gap/document-management', icon: FileText },
+      { name: 'Subscriptions', path: '/gap/subscription-billing', icon: CreditCard },
+      { name: 'CRM Sync', path: '/gap/crm-sync', icon: Users },
+      { name: 'Calendar Sync', path: '/gap/calendar-integration', icon: CalendarClock },
+    ]
+  },
+  {
+    label: 'CFS EXTRAS',
+    items: [
+      { name: 'Pipeline Tracker', path: '/cfs/pipeline-tracker', icon: GitBranch },
+      { name: 'Proposal Workflow', path: '/cfs/proposal-workflow', icon: FileText },
+      { name: 'RAG Literature', path: '/cfs/rag-literature', icon: BookOpen },
+      { name: 'Voice Strategy', path: '/cfs/voice-strategy', icon: Sparkles },
+      { name: 'Multi-Tenant', path: '/cfs/multi-tenant', icon: Building2 },
     ]
   }
 ]
@@ -111,6 +140,9 @@ const pageTitles = {
   '/ai/market-analysis': 'AI Market Analysis',
   '/ai/talent-matcher': 'AI Talent Matcher',
   '/ai/report-generator': 'AI Report Generator',
+  '/ai/proposal-assistant': 'AI Proposal Assistant',
+  '/ai/investment-thesis-analyzer': 'AI Investment Thesis Analyzer',
+  '/ai/talent-brief-generator': 'AI Talent Brief Generator',
 }
 
 export default function Layout({ children }) {
