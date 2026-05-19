@@ -35,6 +35,7 @@ import CFSProposalWorkflowPage from './pages/CFSProposalWorkflowPage'
 import CFSRAGLiteraturePage from './pages/CFSRAGLiteraturePage'
 import CFSVoiceStrategyPage from './pages/CFSVoiceStrategyPage'
 import CFSMultiTenantPage from './pages/CFSMultiTenantPage'
+import CustomViewsPage from './pages/CustomViewsPage'
 import ServicesPage from './pages/ServicesPage'
 import PipelinePage from './pages/PipelinePage'
 import InvoicesPage from './pages/InvoicesPage'
@@ -131,6 +132,7 @@ export default function App() {
       <Route path="/cfs/rag-literature" element={<ProtectedRoute><Layout><CFSRAGLiteraturePage /></Layout></ProtectedRoute>} />
       <Route path="/cfs/voice-strategy" element={<ProtectedRoute><Layout><CFSVoiceStrategyPage /></Layout></ProtectedRoute>} />
       <Route path="/cfs/multi-tenant" element={<ProtectedRoute><Layout><CFSMultiTenantPage /></Layout></ProtectedRoute>} />
+      <Route path="/custom-views" element={<ProtectedRoute><Layout><CustomViewsPage /></Layout></ProtectedRoute>} />
     </Routes>
   )
 }

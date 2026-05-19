@@ -40,6 +40,7 @@ app.use('/api/meetings', require('./routes/meetings'));
 app.use('/api/payments', require('./routes/payments'));
 app.use('/api/ai-extras', require('./routes/ai-extras'));
 app.use('/api', require('./routes/gap-features')); // === Batch 11 Gaps & Frontend Mounts ===
+app.use('/api/custom-views', require('./routes/customViews')); // === Invest Views (Custom Views) ===
 
 // Health check
 app.get('/api/health', (req, res) => {

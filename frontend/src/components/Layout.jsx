@@ -5,7 +5,7 @@ import {
   Compass, Brain, BarChart3, Sparkles, FileBarChart,
   LogOut, ChevronRight, Briefcase, GitBranch, Receipt,
   Search, Award, BookOpen, Building2, ShoppingCart, UserPlus,
-  Handshake, CalendarClock, CreditCard, ClipboardList
+  Handshake, CalendarClock, CreditCard, ClipboardList, LineChart
 } from 'lucide-react'
 
 const navGroups = [
@@ -101,6 +101,12 @@ const navGroups = [
     ]
   },
   {
+    label: 'CUSTOM VIEWS',
+    items: [
+      { name: 'Invest Views', path: '/custom-views', icon: LineChart },
+    ]
+  },
+  {
     label: 'CFS EXTRAS',
     items: [
       { name: 'Pipeline Tracker', path: '/cfs/pipeline-tracker', icon: GitBranch },
@@ -143,6 +149,7 @@ const pageTitles = {
   '/ai/proposal-assistant': 'AI Proposal Assistant',
   '/ai/investment-thesis-analyzer': 'AI Investment Thesis Analyzer',
   '/ai/talent-brief-generator': 'AI Talent Brief Generator',
+  '/custom-views': 'Invest Views',
 }
 
 export default function Layout({ children }) {
