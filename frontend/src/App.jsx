@@ -16,6 +16,26 @@ import AIStrategyPage from './pages/AIStrategyPage'
 import AIMarketPage from './pages/AIMarketPage'
 import AITalentPage from './pages/AITalentPage'
 import AIReportPage from './pages/AIReportPage'
+import AIProposalPage from './pages/AIProposalPage'
+import AIInvestmentThesisPage from './pages/AIInvestmentThesisPage'
+import AITalentBriefPage from './pages/AITalentBriefPage'
+// === Batch 11 Gaps & Frontend Mounts ===
+import GapProposalWritingPage from './pages/GapProposalWritingPage'
+import GapDueDiligencePage from './pages/GapDueDiligencePage'
+import GapRoleSpecPage from './pages/GapRoleSpecPage'
+import GapMeetingSummarizerPage from './pages/GapMeetingSummarizerPage'
+import GapKPIAnomalyPage from './pages/GapKPIAnomalyPage'
+import GapDealStagePage from './pages/GapDealStagePage'
+import GapDocumentManagementPage from './pages/GapDocumentManagementPage'
+import GapSubscriptionBillingPage from './pages/GapSubscriptionBillingPage'
+import GapCRMSyncPage from './pages/GapCRMSyncPage'
+import GapCalendarIntegrationPage from './pages/GapCalendarIntegrationPage'
+import CFSPipelineTrackerPage from './pages/CFSPipelineTrackerPage'
+import CFSProposalWorkflowPage from './pages/CFSProposalWorkflowPage'
+import CFSRAGLiteraturePage from './pages/CFSRAGLiteraturePage'
+import CFSVoiceStrategyPage from './pages/CFSVoiceStrategyPage'
+import CFSMultiTenantPage from './pages/CFSMultiTenantPage'
+import CustomViewsPage from './pages/CustomViewsPage'
 import ServicesPage from './pages/ServicesPage'
 import PipelinePage from './pages/PipelinePage'
 import InvoicesPage from './pages/InvoicesPage'
@@ -81,6 +101,9 @@ export default function App() {
       <Route path="/ai/market-analysis" element={<ProtectedRoute><Layout><AIMarketPage /></Layout></ProtectedRoute>} />
       <Route path="/ai/talent-matcher" element={<ProtectedRoute><Layout><AITalentPage /></Layout></ProtectedRoute>} />
       <Route path="/ai/report-generator" element={<ProtectedRoute><Layout><AIReportPage /></Layout></ProtectedRoute>} />
+      <Route path="/ai/proposal-assistant" element={<ProtectedRoute><Layout><AIProposalPage /></Layout></ProtectedRoute>} />
+      <Route path="/ai/investment-thesis-analyzer" element={<ProtectedRoute><Layout><AIInvestmentThesisPage /></Layout></ProtectedRoute>} />
+      <Route path="/ai/talent-brief-generator" element={<ProtectedRoute><Layout><AITalentBriefPage /></Layout></ProtectedRoute>} />
       <Route path="/services" element={<ProtectedRoute><Layout><ServicesPage /></Layout></ProtectedRoute>} />
       <Route path="/pipeline" element={<ProtectedRoute><Layout><PipelinePage /></Layout></ProtectedRoute>} />
       <Route path="/invoices" element={<ProtectedRoute><Layout><InvoicesPage /></Layout></ProtectedRoute>} />
@@ -93,6 +116,23 @@ export default function App() {
       <Route path="/partners" element={<ProtectedRoute><Layout><PartnersPage /></Layout></ProtectedRoute>} />
       <Route path="/meetings" element={<ProtectedRoute><Layout><MeetingsPage /></Layout></ProtectedRoute>} />
       <Route path="/payments" element={<ProtectedRoute><Layout><PaymentsPage /></Layout></ProtectedRoute>} />
+      {/* === Batch 11 Gaps & Frontend Mounts === */}
+      <Route path="/gap/proposal-writing" element={<ProtectedRoute><Layout><GapProposalWritingPage /></Layout></ProtectedRoute>} />
+      <Route path="/gap/due-diligence" element={<ProtectedRoute><Layout><GapDueDiligencePage /></Layout></ProtectedRoute>} />
+      <Route path="/gap/role-spec" element={<ProtectedRoute><Layout><GapRoleSpecPage /></Layout></ProtectedRoute>} />
+      <Route path="/gap/meeting-summarizer" element={<ProtectedRoute><Layout><GapMeetingSummarizerPage /></Layout></ProtectedRoute>} />
+      <Route path="/gap/kpi-anomaly" element={<ProtectedRoute><Layout><GapKPIAnomalyPage /></Layout></ProtectedRoute>} />
+      <Route path="/gap/deal-stage" element={<ProtectedRoute><Layout><GapDealStagePage /></Layout></ProtectedRoute>} />
+      <Route path="/gap/document-management" element={<ProtectedRoute><Layout><GapDocumentManagementPage /></Layout></ProtectedRoute>} />
+      <Route path="/gap/subscription-billing" element={<ProtectedRoute><Layout><GapSubscriptionBillingPage /></Layout></ProtectedRoute>} />
+      <Route path="/gap/crm-sync" element={<ProtectedRoute><Layout><GapCRMSyncPage /></Layout></ProtectedRoute>} />
+      <Route path="/gap/calendar-integration" element={<ProtectedRoute><Layout><GapCalendarIntegrationPage /></Layout></ProtectedRoute>} />
+      <Route path="/cfs/pipeline-tracker" element={<ProtectedRoute><Layout><CFSPipelineTrackerPage /></Layout></ProtectedRoute>} />
+      <Route path="/cfs/proposal-workflow" element={<ProtectedRoute><Layout><CFSProposalWorkflowPage /></Layout></ProtectedRoute>} />
+      <Route path="/cfs/rag-literature" element={<ProtectedRoute><Layout><CFSRAGLiteraturePage /></Layout></ProtectedRoute>} />
+      <Route path="/cfs/voice-strategy" element={<ProtectedRoute><Layout><CFSVoiceStrategyPage /></Layout></ProtectedRoute>} />
+      <Route path="/cfs/multi-tenant" element={<ProtectedRoute><Layout><CFSMultiTenantPage /></Layout></ProtectedRoute>} />
+      <Route path="/custom-views" element={<ProtectedRoute><Layout><CustomViewsPage /></Layout></ProtectedRoute>} />
     </Routes>
   )
 }
