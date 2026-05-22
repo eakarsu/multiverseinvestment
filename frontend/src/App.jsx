@@ -1,3 +1,5 @@
+import CodexCustomVizFeature from './pages/CodexCustomVizFeature';
+import CodexOperationsFeature from './pages/CodexOperationsFeature';
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
 import LoginPage from './pages/LoginPage'
@@ -70,6 +72,9 @@ function ProtectedRoute({ children }) {
 export default function App() {
   return (
     <Routes>
+        <Route path="/codex/custom-viz" element={<ProtectedRoute><CodexCustomVizFeature /></ProtectedRoute>} />
+        <Route path="/codex/operations" element={<ProtectedRoute><CodexOperationsFeature /></ProtectedRoute>} />
+
       {/* Public website pages */}
       <Route path="/" element={<HomePage />} />
       <Route path="/about" element={<AboutPage />} />
