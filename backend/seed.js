@@ -2,12 +2,14 @@ const { Pool } = require('pg');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
-const pool = new Pool({
+const pool = new Pool(process.env.DATABASE_URL ? {
+  connectionString: process.env.DATABASE_URL,
+} : {
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT, 10) || 5432,
   database: process.env.DB_NAME || 'multiverse_consulting',
   user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || 'postgres',
+  password: process.env.DB_PASSWORD,
 });
 
 async function seed() {
@@ -16,6 +18,7 @@ async function seed() {
   try {
     console.log('Dropping existing tables...');
     await client.query(`
+      DROP TABLE IF EXISTS app_users CASCADE;
       DROP TABLE IF EXISTS payments CASCADE;
       DROP TABLE IF EXISTS meetings CASCADE;
       DROP TABLE IF EXISTS partners CASCADE;
@@ -43,6 +46,20 @@ async function seed() {
 
     // Create tables
     console.log('Creating tables...');
+
+    await client.query(`
+      CREATE TABLE app_users (
+        id BIGSERIAL PRIMARY KEY,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        password_hash TEXT NOT NULL,
+        name VARCHAR(120) NOT NULL,
+        role VARCHAR(40) NOT NULL DEFAULT 'admin',
+        active BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+    console.log('  - app_users table created');
 
     await client.query(`
       CREATE TABLE clients (

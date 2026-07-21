@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Lock, Mail, ArrowRight, Zap } from 'lucide-react'
+import { Lock, Mail, ArrowRight } from 'lucide-react'
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -28,14 +28,6 @@ export default function LoginPage() {
     } finally {
       setLoading(false)
     }
-  }
-
-  const handleQuickLogin = () => {
-    setEmail('admin@multiverse.com')
-    setPassword('admin123')
-    setTimeout(() => {
-      document.getElementById('login-form').requestSubmit()
-    }, 100)
   }
 
   return (
@@ -113,28 +105,8 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-4">
-            <div className="relative my-4">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200" />
-              </div>
-              <div className="relative flex justify-center text-xs">
-                <span className="bg-white px-3 text-dark-400">or</span>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleQuickLogin}
-              className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white py-2.5 rounded-lg font-medium text-sm flex items-center justify-center gap-2"
-            >
-              <Zap size={16} />
-              Demo Access
-            </button>
-          </div>
-
           <p className="text-center text-xs text-dark-400 mt-6">
-            Secure enterprise-grade authentication
+            Use the local administrator credentials configured by the operator.
           </p>
         </div>
       </div>

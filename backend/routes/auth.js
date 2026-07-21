@@ -1,27 +1,35 @@
 const express = require('express');
+const {
+  authenticateCredentials,
+  createSessionToken,
+  requireSession,
+} = require('../lib/session');
 const router = express.Router();
 
 // POST /api/auth/login
-router.post('/login', (req, res) => {
+router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
+    const user = await authenticateCredentials(email, password);
 
-    if (email === 'admin@multiverse.com' && password === 'admin123') {
+    if (user) {
       return res.json({
-        token: 'mock-jwt-token',
-        user: {
-          email,
-          name: 'Admin User',
-          role: 'admin',
-        },
+        token: createSessionToken(user),
+        user,
       });
     }
 
     return res.status(401).json({ error: 'Invalid credentials' });
   } catch (err) {
     console.error('Auth error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(err.status || 500).json({
+      error: err.status === 503 ? err.message : 'Internal server error',
+    });
   }
+});
+
+router.get('/session', requireSession, (req, res) => {
+  res.json({ user: req.session });
 });
 
 module.exports = router;

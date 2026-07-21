@@ -1,6 +1,7 @@
 import CodexCustomVizFeature from './pages/CodexCustomVizFeature';
 import CodexOperationsFeature from './pages/CodexOperationsFeature';
 import { Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import Layout from './components/Layout'
 import LoginPage from './pages/LoginPage'
 import Dashboard from './pages/Dashboard'
@@ -65,7 +66,29 @@ import InsightsPublicPage from './pages/public/InsightsPublicPage'
 
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem('token')
+  const [state, setState] = useState(token ? 'checking' : 'invalid')
+
+  useEffect(() => {
+    if (!token) {
+      setState('invalid')
+      return undefined
+    }
+    let active = true
+    fetch('/api/auth/session', { headers: { Authorization: `Bearer ${token}` } })
+      .then((response) => {
+        if (!response.ok) throw new Error('invalid session')
+        if (active) setState('ready')
+      })
+      .catch(() => {
+        localStorage.removeItem('token')
+        if (active) setState('invalid')
+      })
+    return () => { active = false }
+  }, [token])
+
   if (!token) return <Navigate to="/login" replace />
+  if (state === 'invalid') return <Navigate to="/login" replace />
+  if (state !== 'ready') return <div className="min-h-screen grid place-items-center">Checking session…</div>
   return children
 }
 

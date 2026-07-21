@@ -1,171 +1,70 @@
-#!/bin/bash
+#!/bin/sh
+set -eu
 
-# ============================================================
-# Multiverse Consulting Platform - Startup Script
-# ============================================================
+project_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+backend_port=${BACKEND_PORT:-3031}
+frontend_port=${FRONTEND_PORT:-3023}
 
-# Colors
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-YELLOW='\033[1;33m'
-CYAN='\033[0;36m'
-BOLD='\033[1m'
-NC='\033[0m' # No Color
+fail() {
+  printf 'ERROR: %s\n' "$*" >&2
+  exit 1
+}
 
-# Project root directory
-PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
+command -v node >/dev/null 2>&1 || fail 'Node.js is required'
+command -v npm >/dev/null 2>&1 || fail 'npm is required'
+[ -d "$project_dir/backend/node_modules" ] || fail 'Backend dependencies are missing; run npm ci in backend/'
+[ -d "$project_dir/frontend/node_modules" ] || fail 'Frontend dependencies are missing; run npm ci in frontend/'
+[ -n "${DATABASE_URL:-}" ] || fail 'DATABASE_URL is required'
+[ -n "${SESSION_SECRET:-${JWT_SECRET:-}}" ] || fail 'SESSION_SECRET (32+ bytes) is required'
 
-# -----------------------------------------------------------
-# ASCII Banner
-# -----------------------------------------------------------
-echo -e "${CYAN}${BOLD}"
-echo "  ╔══════════════════════════════════════════════════════╗"
-echo "  ║                                                      ║"
-echo "  ║   ███╗   ███╗██╗   ██╗██╗  ████████╗██╗             ║"
-echo "  ║   ████╗ ████║██║   ██║██║  ╚══██╔══╝██║             ║"
-echo "  ║   ██╔████╔██║██║   ██║██║     ██║   ██║             ║"
-echo "  ║   ██║╚██╔╝██║██║   ██║██║     ██║   ██║             ║"
-echo "  ║   ██║ ╚═╝ ██║╚██████╔╝███████╗██║   ██║             ║"
-echo "  ║   ╚═╝     ╚═╝ ╚═════╝ ╚══════╝╚═╝   ╚═╝             ║"
-echo "  ║                                                      ║"
-echo "  ║        MULTIVERSE CONSULTING PLATFORM                ║"
-echo "  ║                                                      ║"
-echo "  ╚══════════════════════════════════════════════════════╝"
-echo -e "${NC}"
+case ${SESSION_SECRET:-${JWT_SECRET:-}} in
+  ????????????????????????????????*) ;;
+  *) fail 'SESSION_SECRET must contain at least 32 characters' ;;
+esac
 
-# -----------------------------------------------------------
-# Helper functions
-# -----------------------------------------------------------
-info()    { echo -e "${CYAN}[INFO]${NC}    $1"; }
-success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
-warn()    { echo -e "${YELLOW}[WARN]${NC}    $1"; }
-error()   { echo -e "${RED}[ERROR]${NC}   $1"; }
+for port in "$backend_port" "$frontend_port"; do
+  if lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
+    fail "Port $port is already in use; no process was terminated"
+  fi
+done
 
-# -----------------------------------------------------------
-# Step 1: Clean up ports 3000 and 3001
-# -----------------------------------------------------------
-echo ""
-info "Cleaning up ports..."
-lsof -ti:3000 | xargs kill -9 2>/dev/null || true
-lsof -ti:3001 | xargs kill -9 2>/dev/null || true
-success "Ports 3000 and 3001 cleared."
-
-# -----------------------------------------------------------
-# Step 2: Load environment variables
-# -----------------------------------------------------------
-if [ -f "$PROJECT_DIR/.env" ]; then
-    set -a
-    source "$PROJECT_DIR/.env"
-    set +a
-    success "Environment variables loaded from .env"
-else
-    error ".env file not found at $PROJECT_DIR/.env"
-    exit 1
+if [ "${INITIALIZE_DATABASE:-0}" = '1' ]; then
+  [ "${CONFIRM_DATABASE_RESET:-}" = 'YES' ] || fail 'Database reset requires CONFIRM_DATABASE_RESET=YES'
+  (cd "$project_dir/backend" && npm run seed)
 fi
 
-# -----------------------------------------------------------
-# Step 3: Check PostgreSQL
-# -----------------------------------------------------------
-info "Checking PostgreSQL status..."
-if pg_isready -q 2>/dev/null; then
-    success "PostgreSQL is running."
-else
-    warn "PostgreSQL is not running. Attempting to start..."
-    if command -v brew &>/dev/null; then
-        brew services start postgresql@14 2>/dev/null || \
-        brew services start postgresql@15 2>/dev/null || \
-        brew services start postgresql@16 2>/dev/null || \
-        brew services start postgresql 2>/dev/null || true
-    elif command -v pg_ctl &>/dev/null; then
-        pg_ctl -D /usr/local/var/postgres start 2>/dev/null || true
-    fi
+backend_pid=''
+frontend_pid=''
+cleanup() {
+  trap - EXIT INT TERM
+  [ -z "$frontend_pid" ] || kill "$frontend_pid" 2>/dev/null || true
+  [ -z "$backend_pid" ] || kill "$backend_pid" 2>/dev/null || true
+  wait "$frontend_pid" "$backend_pid" 2>/dev/null || true
+}
+trap cleanup EXIT INT TERM
 
-    sleep 2
+(cd "$project_dir/backend" && BACKEND_PORT="$backend_port" npm start) &
+backend_pid=$!
 
-    if pg_isready -q 2>/dev/null; then
-        success "PostgreSQL started successfully."
-    else
-        error "Could not start PostgreSQL. Please start it manually."
-        exit 1
-    fi
-fi
+attempt=0
+until curl -fsS "http://127.0.0.1:$backend_port/api/health" >/dev/null 2>&1; do
+  attempt=$((attempt + 1))
+  kill -0 "$backend_pid" 2>/dev/null || fail 'Backend stopped before becoming healthy'
+  [ "$attempt" -lt 30 ] || fail 'Backend health check timed out'
+  sleep 1
+done
 
-# -----------------------------------------------------------
-# Step 4: Create database if it doesn't exist
-# -----------------------------------------------------------
-info "Ensuring database '${DB_NAME}' exists..."
-createdb "$DB_NAME" 2>/dev/null && success "Database '$DB_NAME' created." || warn "Database '$DB_NAME' already exists."
+(cd "$project_dir/frontend" && BACKEND_PORT="$backend_port" FRONTEND_PORT="$frontend_port" npm run dev -- --host 127.0.0.1 --port "$frontend_port" --strictPort) &
+frontend_pid=$!
 
-# -----------------------------------------------------------
-# Step 5: Install backend dependencies
-# -----------------------------------------------------------
-info "Installing backend dependencies..."
-cd "$PROJECT_DIR/backend" || { error "Backend directory not found!"; exit 1; }
-npm install
-if [ $? -eq 0 ]; then
-    success "Backend dependencies installed."
-else
-    error "Failed to install backend dependencies."
-    exit 1
-fi
+attempt=0
+until curl -fsS "http://127.0.0.1:$frontend_port/login" >/dev/null 2>&1; do
+  attempt=$((attempt + 1))
+  kill -0 "$frontend_pid" 2>/dev/null || fail 'Frontend stopped before becoming ready'
+  [ "$attempt" -lt 30 ] || fail 'Frontend readiness check timed out'
+  sleep 1
+done
 
-# -----------------------------------------------------------
-# Step 6: Run seed script
-# -----------------------------------------------------------
-info "Running database seed script..."
-node seed.js
-if [ $? -eq 0 ]; then
-    success "Database seeded successfully."
-else
-    warn "Seed script encountered issues (may be non-critical)."
-fi
-
-# -----------------------------------------------------------
-# Step 7: Install frontend dependencies
-# -----------------------------------------------------------
-info "Installing frontend dependencies..."
-cd "$PROJECT_DIR/frontend" || { error "Frontend directory not found!"; exit 1; }
-npm install
-if [ $? -eq 0 ]; then
-    success "Frontend dependencies installed."
-else
-    error "Failed to install frontend dependencies."
-    exit 1
-fi
-
-# -----------------------------------------------------------
-# Step 8: Start backend with nodemon
-# -----------------------------------------------------------
-info "Starting backend server with nodemon..."
-cd "$PROJECT_DIR/backend" && npx nodemon server.js &
-BACKEND_PID=$!
-
-# -----------------------------------------------------------
-# Step 9: Start frontend with Vite
-# -----------------------------------------------------------
-info "Starting frontend dev server..."
-cd "$PROJECT_DIR/frontend" && npm run dev &
-FRONTEND_PID=$!
-
-# -----------------------------------------------------------
-# Step 10: Trap for cleanup on exit
-# -----------------------------------------------------------
-trap "echo ''; warn 'Shutting down...'; kill $BACKEND_PID $FRONTEND_PID 2>/dev/null; success 'All processes stopped.'; exit" SIGINT SIGTERM EXIT
-
-# -----------------------------------------------------------
-# Step 11: Status summary
-# -----------------------------------------------------------
-sleep 3
-echo ""
-echo -e "${CYAN}${BOLD}══════════════════════════════════════════════════════${NC}"
-echo -e "${GREEN}${BOLD}  Backend  running on  http://localhost:3001${NC}"
-echo -e "${GREEN}${BOLD}  Frontend running on  http://localhost:3000${NC}"
-echo -e "${CYAN}${BOLD}══════════════════════════════════════════════════════${NC}"
-echo ""
-info "Press Ctrl+C to stop all services."
-echo ""
-
-# -----------------------------------------------------------
-# Wait for both processes
-# -----------------------------------------------------------
-wait $BACKEND_PID $FRONTEND_PID
+printf 'Backend: http://127.0.0.1:%s/api/health\n' "$backend_port"
+printf 'Login:   http://127.0.0.1:%s/login\n' "$frontend_port"
+wait "$backend_pid" "$frontend_pid"
