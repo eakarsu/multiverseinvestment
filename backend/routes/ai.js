@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const fetch = require('node-fetch');
+const crypto = require('crypto');
+const pool = require('../db');
 
 const SYSTEM_PROMPTS = {
   'strategy-advisor': 'You are an elite strategy consultant at Multiverse Consulting. Provide detailed, actionable strategy advice with clear frameworks, implementation steps, and expected outcomes. Format your response with clear sections.',
@@ -15,12 +17,13 @@ const SYSTEM_PROMPTS = {
 async function callOpenRouter(systemPrompt, userQuery) {
   const apiKey = process.env.OPENROUTER_API_KEY;
   const model = process.env.OPENROUTER_MODEL;
+  const baseUrl = process.env.OPENROUTER_BASE_URL;
 
-  if (!apiKey) {
-    throw new Error('OPENROUTER_API_KEY is not configured');
+  if (!apiKey || !model || baseUrl !== 'https://openrouter.ai/api/v1') {
+    throw new Error('Canonical OpenRouter configuration is required');
   }
 
-  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+  const response = await fetch(`${baseUrl}/chat/completions`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
@@ -49,12 +52,39 @@ async function callOpenRouter(systemPrompt, userQuery) {
     throw new Error(data.error.message || 'OpenRouter API error');
   }
 
+  const content = String(data?.choices?.[0]?.message?.content || '').trim();
+  const receipt = String(data?.id || response.headers.get('x-request-id') || '').trim();
+  if (!content || !receipt) throw new Error('OpenRouter returned an incomplete response');
+
   return {
-    result: data.choices[0].message.content,
-    model: data.model,
+    result: content,
+    model: data.model || model,
     usage: data.usage,
+    providerReceipt: { id: receipt },
   };
 }
+
+router.post('/runtime-readiness', async (req, res) => {
+  try {
+    const query = String(req.body?.query || req.body?.prompt || '').trim();
+    if (!query || query.length > 8000) return res.status(400).json({ error: 'A query of 1-8000 characters is required' });
+    const response = await callOpenRouter(
+      'Review an investment advisory workflow. Return concise risks, evidence gaps, next actions, uncertainty, and decisions that require human investment or compliance approval.',
+      query,
+    );
+    const id = crypto.randomUUID();
+    await pool.query(
+      `INSERT INTO runtime_ai_results
+        (id,user_id,feature,prompt,content,provider,model,provider_response_id)
+       VALUES($1,$2,'investment-readiness',$3,$4,'openrouter',$5,$6)`,
+      [id, req.session.id, query, response.result, response.model, response.providerReceipt.id],
+    );
+    return res.json({ id, content: response.result, provider: 'openrouter', model: response.model, providerReceipt: response.providerReceipt });
+  } catch (err) {
+    console.error('Runtime readiness error:', err);
+    return res.status(502).json({ error: 'Failed to obtain provider-backed readiness analysis' });
+  }
+});
 
 // POST /api/ai/strategy-advisor
 router.post('/strategy-advisor', async (req, res) => {

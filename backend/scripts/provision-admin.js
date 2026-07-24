@@ -26,11 +26,16 @@ async function provision() {
   const result = await pool.query(
     `INSERT INTO app_users (email, password_hash, name, role, active)
      VALUES ($1, $2, $3, 'admin', TRUE)
-     ON CONFLICT (email) DO NOTHING
+     ON CONFLICT (email) DO UPDATE SET
+       password_hash = EXCLUDED.password_hash,
+       name = EXCLUDED.name,
+       role = 'admin',
+       active = TRUE,
+       updated_at = NOW()
      RETURNING id`,
     [email, passwordHash, name],
   );
-  console.log(result.rowCount ? `Administrator identity created for ${email}` : `Administrator identity already exists for ${email}`);
+  console.log(`Administrator identity is ready for ${email} (${result.rows[0].id})`);
 }
 
 provision()
