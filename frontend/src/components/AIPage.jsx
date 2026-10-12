@@ -1,8 +1,13 @@
+
+import NativeAIReport from "./NativeAIReport";
+import NativeAIControls from "./NativeAIControls";
+import useNativeAIRequest from "./useNativeAIRequest";
 import { useState } from 'react'
-import ReactMarkdown from 'react-markdown'
-import { Send, Loader2, Copy, Check, Clock, Sparkles, X } from 'lucide-react'
+import { Send, Loader2, Copy, Check, Clock, Sparkles } from 'lucide-react'
 
 export default function AIPage({ title, description, icon: Icon, endpoint, suggestedPrompts, accentColor }) {
+  const nativeAIRequest = useNativeAIRequest();
+
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
@@ -20,18 +25,18 @@ export default function AIPage({ title, description, icon: Icon, endpoint, sugge
     setResult(null)
 
     try {
-      const res = await fetch(`/api/ai/${endpoint}`, {
+      const res = await nativeAIRequest.run((signal) => fetch(`/api/ai/${endpoint}`, { ...({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
         body: JSON.stringify({ query: query.trim() })
-      })
+      }), ...({ signal }) }).then(async (response) => { await response.clone().arrayBuffer(); return response; }))
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Request failed')
       setResult(data)
-      setHistory(prev => [{ query: query.trim(), timestamp: new Date().toLocaleTimeString() }, ...prev.slice(0, 9)])
+      setHistory(prev => [{ query: query.trim(), result: data, timestamp: new Date().toLocaleTimeString() }, ...prev.slice(0, 9)])
     } catch (err) {
       setError(err.message)
     } finally {
@@ -51,13 +56,8 @@ export default function AIPage({ title, description, icon: Icon, endpoint, sugge
     setQuery(prompt)
   }
 
-  const getResponseText = () => {
-    if (!result) return ''
-    return result.response || result.result || result.analysis || result.strategy || result.report || result.recommendations || ''
-  }
-
   return (
-    <div className="max-w-5xl mx-auto">
+    <NativeAIControls busy={nativeAIRequest.busy} onCancel={nativeAIRequest.cancel} context="multiverseinvestment" presets={suggestedPrompts.map((prompt, index) => ({ name: ['Quick brief', 'Team planning', 'Detailed review'][index] || `Example ${index + 1}`, fill: () => { setQuery(prompt); return { filled: 1 } } }))}><div className="max-w-5xl mx-auto">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
@@ -77,7 +77,7 @@ export default function AIPage({ title, description, icon: Icon, endpoint, sugge
         <div className="lg:col-span-2 space-y-6">
           {/* Input */}
           <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <textarea
+            <textarea data-ai-field="query"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Enter your query or describe what you need..."
@@ -163,7 +163,7 @@ export default function AIPage({ title, description, icon: Icon, endpoint, sugge
                 </div>
 
                 <div className="markdown-body">
-                  <ReactMarkdown>{getResponseText()}</ReactMarkdown>
+                  <NativeAIReport response={result} />
                 </div>
 
                 {/* Meta info */}
@@ -191,7 +191,7 @@ export default function AIPage({ title, description, icon: Icon, endpoint, sugge
                 {history.map((h, i) => (
                   <button
                     key={i}
-                    onClick={() => setQuery(h.query)}
+                    onClick={() => { setQuery(h.query); setResult(h.result); setError('') }}
                     className="w-full text-left p-3 rounded-lg hover:bg-gray-50 border border-gray-100"
                   >
                     <p className="text-xs text-dark-600 line-clamp-2">{h.query}</p>
@@ -203,6 +203,6 @@ export default function AIPage({ title, description, icon: Icon, endpoint, sugge
           </div>
         </div>
       </div>
-    </div>
+    </div></NativeAIControls>
   )
 }

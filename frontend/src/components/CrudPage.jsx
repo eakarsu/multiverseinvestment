@@ -106,6 +106,7 @@ function FormField({ field, value, onChange }) {
 export default function CrudPage({ title, endpoint, fields, columns }) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
   const [search, setSearch] = useState('')
   const [selectedItem, setSelectedItem] = useState(null)
   const [showDetail, setShowDetail] = useState(false)
@@ -119,10 +120,15 @@ export default function CrudPage({ title, endpoint, fields, columns }) {
   const fetchItems = async () => {
     try {
       const res = await fetch(`/api/${endpoint}`, { headers })
+      if (!res.ok) throw new Error(`Could not load ${title.toLowerCase()} (HTTP ${res.status})`)
       const data = await res.json()
-      setItems(Array.isArray(data) ? data : [])
-    } catch {
+      const rows = Array.isArray(data) ? data : data?.data
+      if (!Array.isArray(rows)) throw new Error(`Unexpected ${title.toLowerCase()} response`)
+      setItems(rows)
+      setLoadError('')
+    } catch (err) {
       setItems([])
+      setLoadError(err.message)
     } finally {
       setLoading(false)
     }
@@ -203,6 +209,7 @@ export default function CrudPage({ title, endpoint, fields, columns }) {
 
   return (
     <div>
+      {loadError && <p role="alert" className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{loadError}</p>}
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>

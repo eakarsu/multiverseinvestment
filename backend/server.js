@@ -25,6 +25,16 @@ app.use('/api/auth', require('./routes/auth'));
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+app.get('/api/public/insights', async (req, res) => {
+  try {
+    const pool = require('./db');
+    const result = await pool.query("SELECT * FROM insights WHERE status = 'published' ORDER BY published_date DESC, id DESC");
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Public insights error:', err);
+    res.status(500).json({ error: 'Failed to fetch published insights' });
+  }
+});
 
 // Application routes require a valid, unexpired signed session.
 app.use('/api', requireSession);

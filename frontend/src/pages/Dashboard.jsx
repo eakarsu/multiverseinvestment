@@ -53,13 +53,14 @@ export default function Dashboard() {
       fetch(`/api/${card.endpoint}`, { headers })
         .then(r => r.json())
         .then(data => {
-          const count = Array.isArray(data) ? data.length : 0
+          const rows = Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : []
+          const count = rows.length
           setCounts(prev => ({ ...prev, [card.endpoint]: count }))
           if (card.endpoint === 'clients') setStats(prev => ({ ...prev, clients: count }))
           if (card.endpoint === 'projects') setStats(prev => ({ ...prev, projects: count }))
           if (card.endpoint === 'tasks') setStats(prev => ({ ...prev, tasks: count }))
-          if (card.endpoint === 'revenue' && Array.isArray(data)) {
-            const total = data.reduce((s, r) => s + (Number(r.amount) || 0), 0)
+          if (card.endpoint === 'revenue') {
+            const total = rows.reduce((s, r) => s + (Number(r.amount) || 0), 0)
             setStats(prev => ({ ...prev, revenue: total }))
           }
         })

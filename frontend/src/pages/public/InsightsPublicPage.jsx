@@ -67,10 +67,10 @@ export default function InsightsPublicPage() {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('/api/insights');
+      const res = await fetch('/api/public/insights');
       if (!res.ok) throw new Error('Failed to load insights');
       const data = await res.json();
-      setInsights(Array.isArray(data) ? data : data.data || []);
+      setInsights(Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : []);
     } catch (err) {
       setError(err.message);
     } finally {
