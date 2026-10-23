@@ -1,11 +1,24 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
+const fp = require('../lib/feature-pack');
+const CLIENT_FIELDS = ['id', 'name', 'industry', 'contact_email', 'phone', 'status', 'revenue', 'notes', 'created_at'];
 
-// GET /api/clients
+// GET /api/clients/export?format=csv|json — must precede /:id
+router.get('/export', async (req, res) => {
+  try {
+    const { where, params } = fp.buildClientFilter(req.query);
+    const result = await pool.query(`SELECT * FROM clients ${where} ORDER BY created_at DESC LIMIT 1000`, params);
+    if (req.query.format === 'json') { res.setHeader('Content-Disposition', 'attachment; filename="clients.json"'); return res.type('application/json').send(fp.recordsToJson(result.rows)); }
+    res.setHeader('Content-Disposition', 'attachment; filename="clients.csv"'); return res.type('text/csv').send(fp.recordsToCsv(result.rows, CLIENT_FIELDS));
+  } catch (err) { console.error('Error exporting clients:', err); res.status(500).json({ error: 'Failed to export clients' }); }
+});
+
+// GET /api/clients?q=&status=&industry=
 router.get('/', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM clients ORDER BY created_at DESC');
+    const { where, params } = fp.buildClientFilter(req.query);
+    const result = await pool.query(`SELECT * FROM clients ${where} ORDER BY created_at DESC`, params);
     res.json(result.rows);
   } catch (err) {
     console.error('Error fetching clients:', err);

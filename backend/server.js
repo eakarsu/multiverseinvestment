@@ -62,6 +62,7 @@ app.use('/api/partners', require('./routes/partners'));
 app.use('/api/meetings', require('./routes/meetings'));
 app.use('/api/payments', require('./routes/payments'));
 app.use('/api/ai-extras', require('./routes/ai-extras'));
+app.use('/api/feature', require('./routes/feature-pack'));
 app.use('/api', require('./routes/gap-features')); // === Batch 11 Gaps & Frontend Mounts ===
 app.use('/api/custom-views', require('./routes/customViews')); // === Invest Views (Custom Views) ===
 
